@@ -70,7 +70,67 @@ public class EventService {
         return result;
     }
 
+    public Event getNextAvailableSlot(int minutes, LocalDate date) {
+        List<Event> dayEvents = getEventsForDate(date);
+        dayEvents.sort(Comparator.comparing(Event::getStart));
+
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(23, 59);
+
+        // Initial check for events on that day
+        if (dayEvents.isEmpty()) {
+            return new Event(
+                    UUID.randomUUID(),
+                    "Available Slot",
+                    startOfDay,
+                    startOfDay.plusMinutes(minutes));
+        }
+
+        // Check before first event
+        Event first = dayEvents.get(0);
+        if (durationBetween(startOfDay, first.getStart()) >= minutes) {
+            return new Event(
+                    UUID.randomUUID(),
+                    "Available Slot",
+                    startOfDay,
+                    startOfDay.plusMinutes(minutes));
+        }
+
+        // Check between events
+        for (int i = 0; i < dayEvents.size() - 1; i++) {
+            Event current = dayEvents.get(i);
+            Event next = dayEvents.get(i + 1);
+
+            LocalDateTime gapStart = current.getEnd();
+            LocalDateTime gapEnd = next.getStart();
+
+            if (durationBetween(gapStart, gapEnd) >= minutes) {
+                return new Event(
+                        UUID.randomUUID(),
+                        "Available Slot",
+                        gapStart,
+                        gapStart.plusMinutes(minutes));
+            }
+        }
+
+        // Check after last event
+        Event last = dayEvents.get(dayEvents.size() - 1);
+        if (durationBetween(last.getEnd(), endOfDay) >= minutes) {
+            return new Event(
+                    UUID.randomUUID(),
+                    "Available Slot",
+                    last.getEnd(),
+                    last.getEnd().plusMinutes(minutes));
+        }
+
+        return null;
+    }
+
     private boolean isOverlapping(Event a, Event b) {
         return a.getStart().isBefore(b.getEnd()) && a.getEnd().isAfter(b.getStart());
+    }
+
+    private long durationBetween(LocalDateTime a, LocalDateTime b) {
+        return java.time.Duration.between(a, b).toMinutes();
     }
 }

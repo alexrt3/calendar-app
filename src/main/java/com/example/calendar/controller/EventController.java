@@ -54,4 +54,24 @@ public class EventController {
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return eventService.getEventsForDate(date);
     }
+
+    @GetMapping("/next-slot")
+    public ResponseEntity<?> getNextAvailableToday(@RequestParam int minutes) {
+        Event slot = eventService.getNextAvailableSlot(minutes, LocalDate.now());
+        if (slot == null) {
+            return ResponseEntity.ok("No available slot today");
+        }
+        return ResponseEntity.ok(slot);
+    }
+
+    @GetMapping("/day/{date}/next-slot")
+    public ResponseEntity<?> getNextAvailableForDate(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam int minutes) {
+        Event slot = eventService.getNextAvailableSlot(minutes, date);
+        if (slot == null) {
+            return ResponseEntity.ok("No available slot on " + date);
+        }
+        return ResponseEntity.ok(slot);
+    }
 }
