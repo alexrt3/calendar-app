@@ -5,9 +5,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
 
 import com.example.calendar.model.Event;
 
+@Service
 public class EventService {
     private final List<Event> events = new ArrayList<>();
 
@@ -20,7 +24,9 @@ public class EventService {
             throw new IllegalArgumentException("Event start time must be before end time");
         }
 
-        // set ID?
+        if (event.getId() == null) {
+            event.setId(UUID.randomUUID());
+        }
 
         for (Event existing : events) {
             if (isOverlapping(existing, event)) {
